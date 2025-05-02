@@ -138,8 +138,13 @@ class chatwithsqldatabase:
         try:
             result = chain.invoke({"feedback": feedback_prompt})
             corrected_sql = result["sql_query"]
-        except Exception as e:
-            raise ValueError(f"Failed to correct SQL: {str(e)}")
+        except (JSONDecodeError, ValueError) as e:
+            feedback_prompt = (
+            f"Original Question: {feedback_prompt}\n"
+            f"Parser Error: {str(e)}\n"
+            f"Expected format: {format_instructions}"
+        )
+            return self.correct_sql_with_error(feedback_prompt)
 
         try:
             execute_query_tool = QuerySQLDataBaseTool(db=self.db)
